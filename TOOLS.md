@@ -188,6 +188,42 @@ validate_formula_syntax(filepath: str, sheet_name: str, cell: str, formula: str)
 - `formula`: Excel formula to validate
 - Returns: Validation result message
 
+### apply_spill_formula
+
+Apply dynamic array formula to specified range (requires openpyxl-spill).
+
+```python
+apply_spill_formula(
+    filepath: str,
+    sheet_name: str,
+    start_cell: str,
+    end_cell: str,
+    formula: str
+) -> str
+```
+
+- `filepath`: Path to Excel file
+- `sheet_name`: Target worksheet name
+- `start_cell`: Start cell of spill range (e.g., "D1")
+- `end_cell`: End cell of spill range (e.g., "D5")
+- `formula`: Dynamic array formula (e.g., "=UNIQUE(A1:A10)")
+- Returns: Success message with range information
+
+Example usage:
+```python
+# Apply UNIQUE formula
+apply_spill_formula("data.xlsx", "Sheet1", "D1", "D5", "=UNIQUE(A1:A10)")
+
+# Apply SORT formula
+apply_spill_formula("data.xlsx", "Sheet1", "E1", "F10", "=SORT(A1:B10)")
+
+# Apply FILTER formula
+apply_spill_formula("data.xlsx", "Sheet1", "G1", "H5", "=FILTER(A1:B10,B1:B10>50)")
+
+# Apply SEQUENCE formula
+apply_spill_formula("data.xlsx", "Sheet1", "I1", "I10", "=SEQUENCE(10)")
+```
+
 ## Chart Operations
 
 ### create_chart

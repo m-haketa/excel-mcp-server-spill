@@ -20,6 +20,7 @@ A Model Context Protocol (MCP) server that lets you manipulate Excel files witho
 - 📊 **Chart Creation**: Generate various chart types (line, bar, pie, scatter, etc.)
 - 🔄 **Pivot Tables**: Create dynamic pivot tables for data analysis
 - 🔧 **Sheet Management**: Copy, rename, delete worksheets with ease
+- 🌟 **Dynamic Array Formulas**: Support for spill functions (UNIQUE, SORT, FILTER, SEQUENCE, etc.)
 - 🔌 **Triple transport support**: stdio, SSE (deprecated), and streamable HTTP
 - 🌐 **Remote & Local**: Works both locally and as a remote service
 
@@ -104,6 +105,31 @@ When using the **stdio protocol**, the file path is provided with each tool call
 ## Available Tools
 
 The server provides a comprehensive set of Excel manipulation tools. See [TOOLS.md](TOOLS.md) for complete documentation of all available tools.
+
+### Dynamic Array (Spill) Functions
+
+The Excel MCP server supports Excel's dynamic array formulas (spill functions) through the `apply_spill_formula` tool. This feature requires the openpyxl-spill library, which is automatically installed with the server.
+
+#### Example Usage
+
+```python
+# UNIQUE - Extract unique values from a range
+apply_spill_formula("data.xlsx", "Sheet1", "D1", "D10", "=UNIQUE(A1:A10)")
+
+# SORT - Sort data dynamically
+apply_spill_formula("data.xlsx", "Sheet1", "E1", "F10", "=SORT(A1:B10,2,-1)")
+
+# FILTER - Filter data based on criteria
+apply_spill_formula("data.xlsx", "Sheet1", "G1", "H5", '=FILTER(A1:B10,B1:B10>2000)')
+
+# SEQUENCE - Generate a sequence of numbers
+apply_spill_formula("data.xlsx", "Sheet1", "I1", "I10", "=SEQUENCE(10)")
+
+# Combine multiple spill functions
+apply_spill_formula("data.xlsx", "Sheet1", "J1", "J5", "=SORT(UNIQUE(A1:A10))")
+```
+
+These formulas will automatically spill their results across the specified range, just like in modern Excel versions.
 
 ## Star History
 

@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "mcp[cli]>=1.10.1",
-    "openpyxl>=3.1.5",
+    "openpyxl @ git+https://github.com/m-haketa/openpyxl-spill.git",
     "typer>=0.16.0"
 ]
 [[project.authors]]

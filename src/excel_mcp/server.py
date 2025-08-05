@@ -599,6 +599,74 @@ def get_data_validation_info(
         logger.error(f"Error getting validation info: {e}")
         raise
 
+@mcp.tool()
+def apply_spill_formula(
+    filepath: str,
+    sheet_name: str,
+    start_cell: str,
+    end_cell: str,
+    formula: str,
+) -> str:
+    """
+    Apply dynamic array formula to specified range.
+    
+    Args:
+        filepath: Path to Excel file
+        sheet_name: Name of worksheet
+        start_cell: Start cell of spill range (e.g., "D1")
+        end_cell: End cell of spill range (e.g., "D5")
+        formula: Dynamic array formula (e.g., "=UNIQUE(A1:A10)")
+        
+    Returns:
+        Success message with range information
+    """
+    try:
+        full_path = get_excel_path(filepath)
+        from excel_mcp.workbook import get_or_create_workbook
+        from openpyxl.utils import coordinate_to_tuple
+        
+        # Open workbook
+        wb = get_or_create_workbook(full_path)
+        
+        # Check if sheet exists
+        if sheet_name not in wb.sheetnames:
+            return f"Error: Sheet '{sheet_name}' not found"
+        sheet = wb[sheet_name]
+        
+        # Validate cell references
+        try:
+            start_row, start_col = coordinate_to_tuple(start_cell)
+            end_row, end_col = coordinate_to_tuple(end_cell)
+            
+            if start_row > end_row or start_col > end_col:
+                return "Error: Invalid range specification: start_cell must be before end_cell"
+        except ValueError:
+            return f"Error: Invalid cell reference"
+        
+        # Set formula in start cell
+        cell = sheet[start_cell]
+        cell.value = formula
+        
+        # Apply dynamic array formula to range
+        range_str = f"{start_cell}:{end_cell}"
+        cell.set_dynamic_array_formula(range_str)
+        
+        # Save workbook
+        wb.save(full_path)
+        wb.close()
+        
+        logger.info(f"Applied dynamic array formula '{formula}' to range {range_str}")
+        return f"Applied dynamic array formula '{formula}' to range {range_str}"
+        
+    except AttributeError as e:
+        if "set_dynamic_array_formula" in str(e):
+            return "Error: This feature requires openpyxl-spill library. Please ensure it's properly installed."
+        logger.error(f"Error applying spill formula: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Error applying spill formula: {e}")
+        raise
+
 async def run_sse():
     """Run Excel MCP server in SSE mode."""
     # Assign value to EXCEL_FILES_PATH in SSE mode
