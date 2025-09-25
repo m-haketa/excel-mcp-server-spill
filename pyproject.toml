@@ -25,3 +25,6 @@ packages = ["src/excel_mcp"]
 
 [tool.hatch.build]
 packages = ["src/excel_mcp"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
