@@ -33,6 +33,10 @@ from excel_mcp.sheet import (
     merge_range,
     unmerge_range,
     get_merged_ranges,
+    insert_row,
+    insert_cols,
+    delete_rows,
+    delete_cols,
 )
 
 # Get project root directory path for log file path.
@@ -62,16 +66,9 @@ logger = logging.getLogger("excel-mcp")
 # Initialize FastMCP server
 mcp = FastMCP(
     "excel-mcp",
-    version="0.1.5",
-    description="Excel MCP Server for manipulating Excel files",
-    dependencies=["openpyxl>=3.1.5"],
-    env_vars={
-        "EXCEL_FILES_PATH": {
-            "description": "Path to Excel files directory",
-            "required": False,
-            "default": EXCEL_FILES_PATH
-        }
-    }
+    host=os.environ.get("FASTMCP_HOST", "0.0.0.0"),
+    port=int(os.environ.get("FASTMCP_PORT", "8017")),
+    instructions="Excel MCP Server for manipulating Excel files"
 )
 
 def get_excel_path(filename: str) -> str:
@@ -667,7 +664,79 @@ def apply_spill_formula(
         logger.error(f"Error applying spill formula: {e}")
         raise
 
-async def run_sse():
+@mcp.tool()
+def insert_rows(
+    filepath: str,
+    sheet_name: str,
+    start_row: int,
+    count: int = 1
+) -> str:
+    """Insert one or more rows starting at the specified row."""
+    try:
+        full_path = get_excel_path(filepath)
+        result = insert_row(full_path, sheet_name, start_row, count)
+        return result["message"]
+    except (ValidationError, SheetError) as e:
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error inserting rows: {e}")
+        raise
+
+@mcp.tool()
+def insert_columns(
+    filepath: str,
+    sheet_name: str,
+    start_col: int,
+    count: int = 1
+) -> str:
+    """Insert one or more columns starting at the specified column."""
+    try:
+        full_path = get_excel_path(filepath)
+        result = insert_cols(full_path, sheet_name, start_col, count)
+        return result["message"]
+    except (ValidationError, SheetError) as e:
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error inserting columns: {e}")
+        raise
+
+@mcp.tool()
+def delete_sheet_rows(
+    filepath: str,
+    sheet_name: str,
+    start_row: int,
+    count: int = 1
+) -> str:
+    """Delete one or more rows starting at the specified row."""
+    try:
+        full_path = get_excel_path(filepath)
+        result = delete_rows(full_path, sheet_name, start_row, count)
+        return result["message"]
+    except (ValidationError, SheetError) as e:
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error deleting rows: {e}")
+        raise
+
+@mcp.tool()
+def delete_sheet_columns(
+    filepath: str,
+    sheet_name: str,
+    start_col: int,
+    count: int = 1
+) -> str:
+    """Delete one or more columns starting at the specified column."""
+    try:
+        full_path = get_excel_path(filepath)
+        result = delete_cols(full_path, sheet_name, start_col, count)
+        return result["message"]
+    except (ValidationError, SheetError) as e:
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error deleting columns: {e}")
+        raise
+
+def run_sse():
     """Run Excel MCP server in SSE mode."""
     # Assign value to EXCEL_FILES_PATH in SSE mode
     global EXCEL_FILES_PATH
@@ -677,7 +746,7 @@ async def run_sse():
     
     try:
         logger.info(f"Starting Excel MCP server with SSE transport (files directory: {EXCEL_FILES_PATH})")
-        await mcp.run_sse_async()
+        mcp.run(transport="sse")
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
@@ -686,7 +755,7 @@ async def run_sse():
     finally:
         logger.info("Server shutdown complete")
 
-async def run_streamable_http():
+def run_streamable_http():
     """Run Excel MCP server in streamable HTTP mode."""
     # Assign value to EXCEL_FILES_PATH in streamable HTTP mode
     global EXCEL_FILES_PATH
@@ -696,7 +765,7 @@ async def run_streamable_http():
     
     try:
         logger.info(f"Starting Excel MCP server with streamable HTTP transport (files directory: {EXCEL_FILES_PATH})")
-        await mcp.run_streamable_http_async()
+        mcp.run(transport="streamable-http")
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
